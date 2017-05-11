@@ -1,4 +1,8 @@
 import bookcode.WeightedQuickUnionUF as uf
+from random import randint
+import numpy
+import math
+import time
 
 
 class Percolation(object):
@@ -10,7 +14,7 @@ class Percolation(object):
         self.__openNum = 0
         for i in range(n * n):
             self.__isOpen.append(0)
-        self.__wq = uf.WeightedQuickUnionUF(n * n + 1)
+        self.__wq = uf.WeightedQuickUnionUF(n * n + 2)
 
     def open(self, row, col):
         self.__site = self.convert(row, col)
@@ -22,7 +26,7 @@ class Percolation(object):
             elif self.__site >= self.__n * (self.__n - 1):
                 self.__wq.union(self.__site, self.__n * self.__n + 1)
             for dot in self.surrounding(row, col):
-                if dot >= 0 and self.__isOpen[dot] == 1:
+                if dot >= 0 and dot < self.__n * self.__n and self.__isOpen[dot] == 1:
                     self.__wq.union(self.__site, dot)
 
     def isOpen(self, *num):
@@ -45,6 +49,8 @@ class Percolation(object):
     def convert(self, row, col):
         if row > 0 and col > 0:
             return (row - 1) * self.__n + col - 1
+        else:
+            return -1
 
     def surrounding(self, row, col):
         self.__surrounding = []
@@ -55,3 +61,41 @@ class Percolation(object):
         self.__surrounding.append(self.convert(row - 1, col))
 
         return self.__surrounding
+
+
+class PercolationStats(object):
+    def __init__(self, n, t):
+        self.start = time.time()
+        self.totalTime = []
+        for tttime in range(t):
+            self.__per = Percolation(n)
+            self.__time = 0
+            for i in range(n - 1):
+                self.__p = randint(1, n)
+                self.__q = randint(1, n)
+                if not self.__per.isOpen(self.__p, self.__q):
+                    self.__per.open(self.__p, self.__q)
+                    self.__time += 1
+            while not self.__per.percolates():
+                self.__p = randint(1, n)
+                self.__q = randint(1, n)
+                if not self.__per.isOpen(self.__p, self.__q):
+                    self.__per.open(self.__p, self.__q)
+                    self.__time += 1
+            self.totalTime.append(self.__time / (n * n))
+        print(time.time() - self.start)
+        #print("mean                    = " + str(self.mean()))
+        #print("stddev                  = " + str(self.stddev()))
+        #print("95% confidence interval = [" + str(self.confidenceLo()) + ", " + str(self.confidentceHi()) + "]")
+
+    def mean(self):
+        return numpy.mean(self.totalTime)
+
+    def stddev(self):
+        return numpy.std(self.totalTime)
+
+    def confidenceLo(self):
+        return self.mean() - (1.96 * math.sqrt(self.stddev()) / math.sqrt(len(self.totalTime)))
+
+    def confidentceHi(self):
+        return self.mean() + (1.96 * math.sqrt(self.stddev()) / math.sqrt(len(self.totalTime)))

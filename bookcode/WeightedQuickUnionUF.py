@@ -19,7 +19,7 @@ class WeightedQuickUnionUF(object):
     def validate(self, p):
         self.__n = len(self.__parent)
         if p < 0 or p >= self.__n:
-            raise ValueError('index ' + p + ' is not between 0 and ' + str((self.__n-1)))
+            raise ValueError('index ' + str(p) + ' is not between 0 and ' + str((self.__n-1)))
 
     def connected(self, p, q):
         return self.find(p) == self.find(q)
